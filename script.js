@@ -16,6 +16,10 @@ const drawBtn = document.getElementById("drawBtn");
 const eraseBtn = document.getElementById("eraseBtn");
 const stickerBtn = document.getElementById("stickerBtn");
 const clearBtn = document.getElementById("clearBtn");
+let activeIndex = -1;
+let strokes = [];
+let dragging = false;
+let resizing = false;
 
 let drawing = false,
   mode = "draw";
@@ -40,19 +44,68 @@ function canvasToBlob() {
 
 function start(e) {
   const p = pos(e);
+
   if (mode === "sticker") {
-    dragIndex = stickers.findIndex(
-      (s) => p.x > s.x && p.x < s.x + s.w && p.y > s.y && p.y < s.y + s.h
-    );
-  } else {
+    // deselect by default
+    activeIndex = -1;
+    dragging = false;
+    resizing = false;
+
+    // check stickers from top to bottom
+    for (let i = stickers.length - 1; i >= 0; i--) {
+      const s = stickers[i];
+
+      // check resize handle first
+      if (onResizeHandle(p, s)) {
+        activeIndex = i;
+        resizing = true;
+        return; // stop here
+      }
+
+      // check if inside sticker → drag
+      if (
+        p.x > s.x && p.x < s.x + s.w &&
+        p.y > s.y && p.y < s.y + s.h
+      ) {
+        activeIndex = i;
+        dragging = true;
+        redraw();
+        return; // stop here
+      }
+    }
+
+    // click outside stickers → deselect
+    redraw();
+
+  } else if (mode === "draw") {
+    // start new stroke
     drawing = true;
     ctx.beginPath();
     ctx.moveTo(p.x, p.y);
+
+    strokes.push({
+      color: color.value,
+      width: size.value,
+      points: [{ x: p.x, y: p.y }]
+    });
+
+  } else if (mode === "erase") {
+    drawing = true;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+
+    strokes.push({
+      color: "erase", // special flag for erase
+      width: size.value,
+      points: [{ x: p.x, y: p.y }]
+    });
   }
 }
 
+
 function draw(e) {
   const p = pos(e);
+
   if (mode === "draw" && drawing) {
     ctx.globalCompositeOperation = "source-over";
     ctx.strokeStyle = color.value;
@@ -60,23 +113,39 @@ function draw(e) {
     ctx.lineCap = "round";
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
+
+    // save the stroke points
+    strokes[strokes.length - 1].points.push({ x: p.x, y: p.y });
   }
+
   if (mode === "erase" && drawing) {
     ctx.globalCompositeOperation = "destination-out";
     ctx.lineWidth = size.value;
     ctx.lineTo(p.x, p.y);
     ctx.stroke();
   }
-  if (mode === "sticker" && dragIndex != -1) {
-    stickers[dragIndex].x = p.x - stickers[dragIndex].w / 2;
-    stickers[dragIndex].y = p.y - stickers[dragIndex].h / 2;
-    redraw();
+
+  if (mode === "sticker" && activeIndex !== -1) {
+    const s = stickers[activeIndex];
+
+    if (dragging) {
+      s.x = p.x - s.w / 2;
+      s.y = p.y - s.h / 2;
+      redraw();
+    }
+
+    if (resizing) {
+      s.w = Math.max(30, p.x - s.x);
+      s.h = Math.max(30, p.y - s.y);
+      redraw();
+    }
   }
 }
 
 function stop() {
   drawing = false;
-  dragIndex = -1;
+  dragging = false;
+  resizing = false;
 }
 
 canvas.addEventListener("mousedown", start);
@@ -85,21 +154,121 @@ canvas.addEventListener("mouseup", stop);
 canvas.addEventListener("touchstart", start);
 canvas.addEventListener("touchmove", draw);
 canvas.addEventListener("touchend", stop);
+canvas.addEventListener("touchmove", (e) => e.preventDefault(), {
+  passive: false,
+});
+canvas.style.cursor = mode === "sticker" ? "move" : "crosshair";
+
 
 upload.onchange = function () {
   const file = this.files[0];
+  if (!file) return;
+
   const img = new Image();
   img.onload = () => {
-    stickers.push({ img, x: 60, y: 60, w: 70, h: 70 });
+    stickers.push({
+      img,
+      x: 60,
+      y: 60,
+      w: 80,
+      h: 80,
+      resizing: false,
+    });
     redraw();
   };
   img.src = URL.createObjectURL(file);
 };
 
+document.querySelectorAll("#emojiStickers button").forEach((btn) => {
+  btn.onclick = () => addEmojiSticker(btn.dataset.emoji);
+});
+
+function addEmojiSticker(emoji) {
+  const size = 64;
+  const off = document.createElement("canvas");
+  off.width = off.height = size;
+  const octx = off.getContext("2d");
+
+  octx.font = "48px system-ui";
+  octx.textAlign = "center";
+  octx.textBaseline = "middle";
+  octx.fillText(emoji, size / 2, size / 2);
+
+  const img = new Image();
+  img.onload = () => {
+    stickers.push({
+      img,
+      x: 80,
+      y: 80,
+      w: 80,
+      h: 80,
+    });
+    activeIndex = stickers.length - 1;
+    redraw();
+  };
+  img.src = off.toDataURL();
+}
+
+function onResizeHandle(p, s) {
+  const size = 14;
+  return (
+    p.x > s.x + s.w - size &&
+    p.x < s.x + s.w &&
+    p.y > s.y + s.h - size &&
+    p.y < s.y + s.h
+  );
+}
+
+function setMode(m) {
+  mode = m;
+
+  // hide sticker selection when changing mode
+  activeIndex = -1;  
+  dragging = false;
+  resizing = false;
+
+  redraw(); // refresh canvas to remove border
+
+  // update active button highlight
+  document.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+  if (m === "draw") drawBtn.classList.add("active");
+  if (m === "erase") eraseBtn.classList.add("active");
+  if (m === "sticker") stickerBtn.classList.add("active");
+}
+
+
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  stickers.forEach((s) => ctx.drawImage(s.img, s.x, s.y, s.w, s.h));
+
+  // 1️⃣ redraw all previous strokes
+  strokes.forEach(stroke => {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = stroke.width;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    stroke.points.forEach((p, i) => {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+  });
+
+  // 2️⃣ redraw all stickers
+  stickers.forEach((s, i) => {
+    ctx.drawImage(s.img, s.x, s.y, s.w, s.h);
+
+    if (mode === "sticker" && i === activeIndex) {
+      ctx.strokeStyle = "#3b82f6";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(s.x, s.y, s.w, s.h);
+
+      ctx.fillStyle = "#3b82f6";
+      ctx.fillRect(s.x + s.w - 14, s.y + s.h - 14, 14, 14);
+    }
+  });
 }
+
 
 drawBtn.onclick = () => (mode = "draw");
 eraseBtn.onclick = () => (mode = "erase");
@@ -140,18 +309,16 @@ submitBtn.onclick = async () => {
     const fileName = `art_${Date.now()}.png`;
 
     // 1️⃣ Upload image
-    const { error: uploadError } = await supabaseClient
-      .storage
+    const { error: uploadError } = await supabaseClient.storage
       .from("image")
       .upload(fileName, blob, {
-        contentType: "image/png"
+        contentType: "image/png",
       });
 
     if (uploadError) throw uploadError;
 
     // 2️⃣ Get public URL (STORAGE, not DB)
-    const { data } = supabaseClient
-      .storage
+    const { data } = supabaseClient.storage
       .from("image")
       .getPublicUrl(fileName);
 
@@ -161,7 +328,7 @@ submitBtn.onclick = async () => {
       .insert({
         star: rating,
         comment: document.getElementById("comment").value,
-        image_url: data.publicUrl
+        image_url: data.publicUrl,
       });
 
     if (insertError) throw insertError;
@@ -173,8 +340,7 @@ submitBtn.onclick = async () => {
     stickers = [];
     document.getElementById("comment").value = "";
     rating = 0;
-    stars.forEach(s => s.classList.remove("active"));
-
+    stars.forEach((s) => s.classList.remove("active"));
   } catch (err) {
     console.error(err);
     statusText.innerText = "❌ เกิดข้อผิดพลาด กรุณาลองใหม่";
@@ -221,7 +387,7 @@ async function loadFeedback() {
 function renderTable(rows) {
   tableBody.innerHTML = "";
 
-  rows.forEach(row => {
+  rows.forEach((row) => {
     const tr = document.createElement("tr");
 
     tr.innerHTML = `
@@ -238,9 +404,7 @@ function renderTable(rows) {
 
 // Load total + average score
 async function loadStats() {
-  const { data, error } = await supabaseClient
-    .from("feedback")
-    .select("star");
+  const { data, error } = await supabaseClient.from("feedback").select("star");
 
   if (error) return;
 
@@ -268,5 +432,3 @@ nextBtn.onclick = () => {
 
 // Initial load
 loadFeedback();
-
-

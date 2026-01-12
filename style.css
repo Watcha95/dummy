@@ -140,6 +140,17 @@ th, td {
   background: #fff;
 }
 
+#emojiStickers button {
+  font-size: 20px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+#emojiStickers button:hover {
+  transform: scale(1.1);
+}
+
+
 
 
 
