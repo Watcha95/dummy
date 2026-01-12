@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <title>อาร์ตเวิร์ก พิพิธภัณฑสถานแห่งชาติ สมเด็จพระนารายณ์</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="card">
+      <h1>🎨 อาร์ตเวิร์ก</h1>
+      <h2>พิพิธภัณฑสถานแห่งชาติ สมเด็จพระนารายณ์</h2>
+      <p class="subtitle">วาด แปะสติกเกอร์ และสร้างผลงานในแบบของคุณ ✨</p>
+
+      <canvas id="canvas" width="320" height="420"></canvas>
+
+      <div class="tools">
+        <div class="row big">
+          <button id="drawBtn">🖌 วาด</button>
+          <button id="eraseBtn">🧽 ลบ</button>
+          <button id="stickerBtn">📌 สติกเกอร์</button>
+        </div>
+
+        <div class="row">
+          🎨 <input type="color" id="color" value="#ff6fae" /> 🖌
+          <input type="range" id="size" min="1" max="30" value="8" />
+        </div>
+
+        <div class="row">
+          <label class="file big">
+            📷 เพิ่มรูปทำสติกเกอร์
+            <input type="file" id="upload" accept="image/*" hidden />
+          </label>
+        </div>
+
+        <button id="clearBtn" class="danger big">🗑 ล้างทั้งหมด</button>
+      </div>
+      <div class="feedback">
+        <p>ให้คะแนนความพึงพอใจ</p>
+        <div id="stars">
+          <span data-v="1">☆</span>
+          <span data-v="2">☆</span>
+          <span data-v="3">☆</span>
+          <span data-v="4">☆</span>
+          <span data-v="5">☆</span>
+        </div>
+
+        <p>ความคิดเห็นเพิ่มเติม</p>
+        <textarea
+          id="comment"
+          placeholder="เขียนความคิดเห็นของคุณที่นี่... 💬"
+        ></textarea>
+        <button id="submitBtn" class="big">📤 ส่งผลงาน</button>
+        <p id="status"></p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

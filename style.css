@@ -1,0 +1,105 @@
+body{
+  background: linear-gradient(135deg,#ffe6f2,#e8f0ff);
+  font-family: "Kanit", sans-serif;
+  text-align:center;
+}
+
+.card{
+  background:#fff;
+  max-width:380px;
+  margin:20px auto;
+  padding:16px;
+  border-radius:24px;
+  box-shadow:0 12px 24px rgba(0,0,0,0.12);
+}
+
+h1{color:#ff5fa2;margin:0}
+h2{font-size:16px;margin:2px 0;color:#666}
+.subtitle{font-size:13px;color:#888;margin-bottom:8px}
+
+canvas{
+  border:3px dashed #ff9acb;
+  border-radius:16px;
+  background:#fff;
+  touch-action:none;
+  margin:8px 0;
+}
+
+.tools{margin-top:6px}
+.row{margin:6px 0}
+
+button,.file{
+    button, .file {
+  font-size: 16px;
+  padding: 12px 16px;
+  border-radius: 22px;
+}
+
+.big button, .big {
+  width: 100%;
+  max-width: 320px;
+  display: block;
+  margin: 6px auto;
+}
+
+input[type="range"] {
+  width: 140px;
+  height: 28px;
+}
+  background:#ffb3d9;
+  border:none;
+  border-radius:20px;
+  padding:8px 14px;
+  margin:4px;
+  cursor:pointer;
+  font-size:13px;
+  box-shadow:0 4px 0 #e88bb6;
+  transition:.1s;
+}
+
+button:hover,.file:hover{
+  transform:translateY(2px);
+  box-shadow:0 2px 0 #e88bb6;
+}
+
+button.danger{
+  background:#ff7b7b;
+  box-shadow:0 4px 0 #d85c5c;
+}
+
+input[type="range"]{width:80px}
+
+.feedback{
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px dashed #ffd0e5;
+}
+
+#stars span{
+  font-size:30px;
+  cursor:pointer;
+  color:#ffc0da;
+  transition:.15s;
+}
+
+#stars span.active{
+  color:#ff4fa0;
+  text-shadow:0 0 6px #ff9acb;
+}
+
+#stars span:hover{
+  transform:scale(1.2);
+}
+
+textarea{
+  width:90%;
+  height:60px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  padding:6px;
+  font-family:inherit;
+  margin-top:4px;
+}
+
+
+
