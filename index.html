@@ -54,6 +54,31 @@
         <p id="status"></p>
       </div>
     </div>
+    <div class="feedback-list">
+      <h3>📊 ผลงานและคะแนนจากผู้เข้าชม</h3>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ภาพ</th>
+            <th>คะแนน</th>
+            <th>ความคิดเห็น</th>
+          </tr>
+        </thead>
+        <tbody id="feedbackTable"></tbody>
+      </table>
+
+      <div class="pagination">
+        <button id="prevBtn">⬅ ก่อนหน้า</button>
+        <span id="pageInfo"></span>
+        <button id="nextBtn">ถัดไป ➡</button>
+      </div>
+
+      <div class="stats">
+        <p>ทั้งหมด: <strong id="totalCount">0</strong> รายการ</p>
+        <p>คะแนนเฉลี่ย: <strong id="avgScore">0</strong> ⭐</p>
+      </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="script.js"></script>
