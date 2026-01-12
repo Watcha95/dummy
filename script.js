@@ -63,20 +63,19 @@ function start(e) {
       }
 
       // check if inside sticker → drag
-      if (
-        p.x > s.x && p.x < s.x + s.w &&
-        p.y > s.y && p.y < s.y + s.h
-      ) {
+      if (p.x > s.x && p.x < s.x + s.w && p.y > s.y && p.y < s.y + s.h) {
         activeIndex = i;
         dragging = true;
         redraw();
-        return; // stop here
+
+        // update resize slider value to match selected sticker
+        stickerSize.value = s.w;
+        return;
       }
     }
 
     // click outside stickers → deselect
     redraw();
-
   } else if (mode === "draw") {
     // start new stroke
     drawing = true;
@@ -86,9 +85,8 @@ function start(e) {
     strokes.push({
       color: color.value,
       width: size.value,
-      points: [{ x: p.x, y: p.y }]
+      points: [{ x: p.x, y: p.y }],
     });
-
   } else if (mode === "erase") {
     drawing = true;
     ctx.beginPath();
@@ -97,11 +95,10 @@ function start(e) {
     strokes.push({
       color: "erase", // special flag for erase
       width: size.value,
-      points: [{ x: p.x, y: p.y }]
+      points: [{ x: p.x, y: p.y }],
     });
   }
 }
-
 
 function draw(e) {
   const p = pos(e);
@@ -223,25 +220,26 @@ function setMode(m) {
   mode = m;
 
   // hide sticker selection when changing mode
-  activeIndex = -1;  
+  activeIndex = -1;
   dragging = false;
   resizing = false;
 
   redraw(); // refresh canvas to remove border
 
   // update active button highlight
-  document.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+  document
+    .querySelectorAll("button")
+    .forEach((b) => b.classList.remove("active"));
   if (m === "draw") drawBtn.classList.add("active");
   if (m === "erase") eraseBtn.classList.add("active");
   if (m === "sticker") stickerBtn.classList.add("active");
 }
 
-
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // 1️⃣ redraw all previous strokes
-  strokes.forEach(stroke => {
+  strokes.forEach((stroke) => {
     ctx.globalCompositeOperation = "source-over";
     ctx.strokeStyle = stroke.color;
     ctx.lineWidth = stroke.width;
@@ -268,7 +266,6 @@ function redraw() {
     }
   });
 }
-
 
 drawBtn.onclick = () => (mode = "draw");
 eraseBtn.onclick = () => (mode = "erase");
@@ -429,6 +426,16 @@ nextBtn.onclick = () => {
     loadFeedback();
   }
 };
+
+const stickerSize = document.getElementById("stickerSize");
+
+stickerSize.addEventListener("input", () => {
+  if (activeIndex === -1) return; // no sticker selected
+  const s = stickers[activeIndex];
+  s.w = stickerSize.value;
+  s.h = stickerSize.value; // keep square
+  redraw();
+});
 
 // Initial load
 loadFeedback();
